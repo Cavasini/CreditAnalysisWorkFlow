@@ -1,0 +1,14 @@
+tech\buildrun\lambda\model\request\Applicant\creditData\CreditData.class
+tech\buildrun\lambda\model\request\Applicant\PersonalData\IdentityDocument.class
+tech\buildrun\lambda\model\request\Applicant\FinancialData\CurrentDebt.class
+tech\buildrun\lambda\model\request\Applicant\PersonalData\Contact.class
+tech\buildrun\lambda\model\request\Applicant\PersonalData\PersonalData.class
+tech\buildrun\lambda\Handler.class
+tech\buildrun\lambda\model\request\Applicant\FinancialData\FinancialData.class
+tech\buildrun\lambda\model\request\Applicant\Applicant.class
+tech\buildrun\lambda\model\request\Applicant\professionalData\ProfessionalData.class
+tech\buildrun\lambda\model\request\FinancingDetails\FinancingDetails.class
+tech\buildrun\lambda\model\request\Applicant\PersonalData\Address.class
+tech\buildrun\lambda\model\request\vehicle\Vehicle.class
+tech\buildrun\lambda\model\CreditAnalysis.class
+tech\buildrun\lambda\model\request\RequestPayload.class

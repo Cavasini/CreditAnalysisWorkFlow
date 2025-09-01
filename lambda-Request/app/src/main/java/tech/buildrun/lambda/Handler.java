@@ -5,8 +5,7 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.*;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
@@ -22,7 +21,16 @@ public class Handler implements
     private final DynamoDbClient ddb = DynamoDbClient.create();
     private final DynamoDbEnhancedClient enhancedClient = DynamoDbEnhancedClient.builder().dynamoDbClient(ddb).build();
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private static final JedisPool jedisPool = new JedisPool(System.getenv("REDIS_ENDPOINT"), 6379);
+    private static final String  redisHost = System.getenv("REDIS_ENDPOINT");
+    private static final int redisPort = 6379;
+//    private static final JedisPool jedisPool = new JedisPool(System.getenv("REDIS_ENDPOINT"));
+
+    private static JedisPool jedispool = null;
+
+    static {
+            JedisClientConfig clientConfig = DefaultJedisClientConfig.builder().ssl(true).build();
+            jedispool = new JedisPool(new HostAndPort(redisHost, redisPort), clientConfig);
+    }
 
     @Override
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent request,
@@ -43,9 +51,13 @@ public class Handler implements
             analysisTable.putItem(analysis);
             logger.log("Analysis saved successfully! RequestID: " + analysis.getRequestId());
 
+            JedisClientConfig clientConfig = DefaultJedisClientConfig.builder().ssl(true).build();
 
-            try(Jedis jedis = jedisPool.getResource()){
-                jedis.setex(analysis.getRequestId(), 600, requestPayload.toString());
+            String cacheValue = "";
+            try(Jedis jedis = jedispool.getResource()){
+                String jsonValue = objectMapper.writeValueAsString(requestPayload);
+                jedis.setex(analysis.getRequestId(), 600, jsonValue);
+                cacheValue = jedis.get(analysis.getRequestId());
                 logger.log("Cache atualizado com sucesso.");
             }catch (Exception e){
                 logger.log("AVISO: Falha ao salvar no cache: " + e.getMessage());
@@ -53,7 +65,7 @@ public class Handler implements
 
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(201)
-                    .withBody("{\"message\": \"Analysis saved successfully!\", \"requestId\": \"" + analysis.getRequestId() + "\"}")
+                    .withBody(cacheValue)
                     .withIsBase64Encoded(false);
 
 
